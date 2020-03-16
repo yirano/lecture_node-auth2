@@ -1,40 +1,51 @@
-const router = require('express').Router();
-const bcrypt = require('bcryptjs');
+const express = require("express")
+const bcrypt = require("bcryptjs")
+const Users = require("../users/users-model")
+const restrict = require("../middleware/restrict")
 
-const Users = require('../users/users-model.js');
+const router = express.Router()
 
-// for endpoints beginning with /api/auth
-router.post('/register', (req, res) => {
-  let user = req.body;
-  const hash = bcrypt.hashSync(user.password, 10); // 2 ^ n
-  user.password = hash;
+router.post("/register", async (req, res, next) => {
+	try {
+		const { username } = req.body
+		const user = await Users.findBy({ username }).first()
 
-  Users.add(user)
-    .then(saved => {
-      res.status(201).json(saved);
-    })
-    .catch(error => {
-      res.status(500).json(error);
-    });
-});
+		if (user) {
+			return res.status(409).json({
+				message: "Username is already taken",
+			})
+		}
 
-router.post('/login', (req, res) => {
-  let { username, password } = req.body;
+		res.status(201).json(await Users.add(req.body))
+	} catch(err) {
+		next(err)
+	}
+})
 
-  Users.findBy({ username })
-    .first()
-    .then(user => {
-      if (user && bcrypt.compareSync(password, user.password)) {
-        res.status(200).json({
-          message: `Welcome ${user.username}!`,
-        });
-      } else {
-        res.status(401).json({ message: 'Invalid Credentials' });
-      }
-    })
-    .catch(error => {
-      res.status(500).json(error);
-    });
-});
+router.post("/login", async (req, res, next) => {
+	const authError = {
+		message: "Invalid Credentials",
+	}
 
-module.exports = router;
+	try {
+		const { username, password } = req.body
+
+		const user = await Users.findBy({ username }).first()
+		if (!user) {
+			return res.status(401).json(authError)
+		}
+
+		const passwordValid = await bcrypt.compare(password, user.password)
+		if (!passwordValid) {
+			return res.status(401).json(authError)
+		}
+
+		res.json({
+			message: `Welcome ${user.username}!`,
+		})
+	} catch(err) {
+		next(err)
+	}
+})
+
+module.exports = router
