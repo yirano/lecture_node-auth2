@@ -1,26 +1,12 @@
-const bcrypt = require("bcryptjs")
-const Users = require("../users/users-model")
-
 function restrict() {
-	const authError = {
-		message: "Invalid credentials",
-	}
-	
 	return async (req, res, next) => {
 		try {
-			const { username, password } = req.headers
-			if (!username || !password) {
-				return res.status(401).json(authError)
-			}
-
-			const user = await Users.findBy({ username }).first()
-			if (!user) {
-				return res.status(401).json(authError)
-			}
-
-			const passwordValid = await bcrypt.compare(password, user.password)
-			if (!passwordValid) {
-				return res.status(401).json(authError)
+			// express-session will automatically get the session ID from the cookie
+			// header, and check to make sure it's valid and the session for this user exists.
+			if (!req.session || !req.session.user) {
+				return res.status(401).json({
+					message: "Invalid credentials",
+				})
 			}
 
 			next()
