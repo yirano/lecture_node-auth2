@@ -2,6 +2,8 @@
 
 Guided project for **Node Auth 3** Module.
 
+_If you're looking for the old project for `Using Sessions and Cookies`, you can find it [here](https://github.com/jsonmaur/node-auth2-guided-old)._
+
 ## Prerequisites
 
 - [DB Browser for SQLite](https://sqlitebrowser.org) installed.
