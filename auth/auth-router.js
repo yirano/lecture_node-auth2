@@ -26,6 +26,7 @@ router.post("/login", async (req, res, next) => {
 	const authError = {
 		message: "Invalid Credentials",
 	}
+
 	try {
 		const user = await Users.findBy({ username: req.body.username }).first()
 		if (!user) {
